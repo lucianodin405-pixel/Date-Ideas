@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💜 Date Request Form v1.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --purple: #8B5CF6;
+    --lavender: #C4B5FD;
+    --pink: #F9A8D4;
+    --bg-dark: #0D0A1A;
+    --glow: rgba(139,92,246,0.4);
+    --white: #fff;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0D0A1A 0%, #1A0A3C 40%, #0D0A1A 100%);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ─── STARS ─── */
+  .stars-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(139,92,246,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(196,181,253,0.06) 0%, transparent 60%);
+  }
+  .star {
+    position: fixed; width: 2px; height: 2px;
+    background: #fff; border-radius: 50%;
+    animation: twinkle var(--d, 3s) ease-in-out infinite;
+    opacity: var(--o, 0.5);
+  }
+  @keyframes twinkle { 0%,100%{opacity:var(--o,.5)} 50%{opacity:0.1} }
+
+  /* ─── SECTIONS ─── */
+  section {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 20px;
+  }
+
+  /* ─── SHARED COMPONENTS ─── */
+  .version-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    color: var(--lavender);
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(196,181,253,0.3);
+    padding: 6px 16px; border-radius: 20px;
+    display: inline-block; margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(22px, 5vw, 44px); font-weight: 700;
+    background: linear-gradient(135deg, #fff 0%, var(--lavender) 50%, var(--pink) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    line-height: 1.2; margin-bottom: 4px;
+  }
+
+  .terminal-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(196,181,253,0.2);
+    border-radius: 16px; padding: 32px 40px;
+    max-width: 640px; width: 100%;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 60px rgba(139,92,246,0.15), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .terminal-bar { display: flex; gap: 8px; margin-bottom: 24px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #FF5F56; }
+  .dot-y { background: #FFBD2E; }
+  .dot-g { background: #27C93F; }
+
+  /* ─── LANDING ─── */
+  #landing { text-align: center; gap: 24px; }
+
+  .greeting { font-size: clamp(13px, 2.5vw, 15px); line-height: 1.8; color: rgba(255,255,255,0.85); text-align: left; }
+  .greeting strong { color: var(--pink); font-weight: 600; }
+  .greeting .hl { color: var(--lavender); }
+
+  .question {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(14px, 3vw, 20px); color: var(--lavender);
+    margin: 32px 0 28px; padding: 20px;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 12px; text-align: center; line-height: 1.5;
+  }
+
+  .btn-zone { position: relative; height: 80px; display: flex; align-items: center; justify-content: center; gap: 20px; }
+
+  .btn-yes, .btn-no {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px; font-weight: 700;
+    border: none; border-radius: 12px;
+    cursor: pointer; padding: 14px 32px;
+    transition: transform .2s, box-shadow .2s;
+    letter-spacing: 1px;
+  }
+  .btn-yes {
+    background: linear-gradient(135deg, var(--purple), #6D28D9);
+    color: #fff; box-shadow: 0 4px 20px rgba(139,92,246,0.5);
+  }
+  .btn-yes:hover { transform: scale(1.05); box-shadow: 0 6px 30px rgba(139,92,246,0.7); }
+  .btn-no {
+    background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.1); position: absolute;
+  }
+
+  .no-msg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--pink);
+    min-height: 20px; text-align: center; margin-top: 8px; letter-spacing: .5px;
+  }
+
+  /* ─── DATE PICKER ─── */
+  #date-picker { display: none; flex-direction: column; align-items: center; gap: 24px; text-align: center; }
+
+  .picker-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(196,181,253,0.2);
+    border-radius: 16px; padding: 36px 40px;
+    max-width: 660px; width: 100%;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 60px rgba(139,92,246,0.12);
+  }
+
+  .picker-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; letter-spacing: 1.5px; color: var(--lavender);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .picker-title {
+    font-size: clamp(16px, 3.5vw, 22px); font-weight: 600;
+    color: rgba(255,255,255,0.9); margin-bottom: 28px; line-height: 1.4;
+  }
+  .picker-title span { color: var(--pink); }
+
+  .date-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px; margin-bottom: 28px;
+  }
+
+  .date-option {
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(196,181,253,0.15);
+    border-radius: 14px; padding: 20px 12px;
+    cursor: pointer; transition: all .25s ease;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    position: relative; overflow: hidden;
+  }
+  .date-option::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(249,168,212,0.05));
+    opacity: 0; transition: opacity .25s;
+  }
+  .date-option:hover::before { opacity: 1; }
+  .date-option:hover {
+    border-color: rgba(196,181,253,0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(139,92,246,0.2);
+  }
+  .date-option.selected {
+    border-color: var(--purple);
+    background: rgba(139,92,246,0.15);
+    box-shadow: 0 0 0 1px var(--purple), 0 8px 24px rgba(139,92,246,0.3);
+    transform: translateY(-3px);
+  }
+  .date-option.selected::before { opacity: 1; }
+
+  .date-emoji { font-size: 32px; line-height: 1; }
+  .date-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 600; letter-spacing: .5px;
+    color: rgba(255,255,255,0.85); text-align: center;
+  }
+  .date-desc {
+    font-size: 10px; color: rgba(255,255,255,0.4);
+    text-align: center; line-height: 1.4;
+  }
+  .date-check {
+    position: absolute; top: 8px; right: 8px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--purple); display: none;
+    align-items: center; justify-content: center; font-size: 11px;
+  }
+  .date-option.selected .date-check { display: flex; }
+
+  .picker-note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: rgba(255,255,255,0.3); margin-bottom: 20px; letter-spacing: .5px;
+  }
+
+  .btn-continue {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; font-weight: 700; letter-spacing: 1px;
+    background: linear-gradient(135deg, var(--purple), #6D28D9);
+    color: #fff; border: none; border-radius: 12px;
+    padding: 16px 48px; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(139,92,246,0.5);
+    transition: all .2s; opacity: 0.4; pointer-events: none;
+  }
+  .btn-continue.ready { opacity: 1; pointer-events: all; }
+  .btn-continue.ready:hover { transform: scale(1.04); box-shadow: 0 6px 30px rgba(139,92,246,0.7); }
+
+  /* ─── LOADING ─── */
+  #loading { display: none; flex-direction: column; align-items: center; gap: 24px; text-align: center; }
+
+  .loading-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(196,181,253,0.2);
+    border-radius: 16px; padding: 40px;
+    max-width: 500px; width: 100%; backdrop-filter: blur(10px);
+  }
+
+  .loader-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; letter-spacing: 2px;
+    color: var(--lavender); text-transform: uppercase; margin-bottom: 28px;
+  }
+
+  .log-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    text-align: left; padding: 4px 0;
+    opacity: 0; transform: translateX(-10px);
+    transition: opacity .4s, transform .4s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .log-line.active { opacity: 1; transform: translateX(0); color: var(--lavender); }
+  .log-line.done { color: #34D399; opacity: .8; }
+  .log-line::before { content: '▸'; color: var(--purple); flex-shrink: 0; }
+  .log-line.done::before { content: '✓'; color: #34D399; }
+
+  .progress-wrap { margin-top: 24px; }
+  .progress-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--lavender);
+    display: flex; justify-content: space-between; margin-bottom: 8px;
+  }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 20px; overflow: hidden; }
+  .progress-fill {
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--purple), var(--pink));
+    border-radius: 20px; transition: width .6s ease;
+    box-shadow: 0 0 10px rgba(139,92,246,0.6);
+  }
+
+  /* ─── SUCCESS ─── */
+  #success { display: none; flex-direction: column; align-items: center; gap: 28px; text-align: center; padding: 60px 20px; }
+
+  .match-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(22px, 5vw, 40px); font-weight: 700;
+    background: linear-gradient(135deg, var(--lavender), var(--pink));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  @keyframes pulse-glow { 0%,100%{filter:drop-shadow(0 0 8px rgba(196,181,253,.5))} 50%{filter:drop-shadow(0 0 20px rgba(249,168,212,.8))} }
+
+  .chosen-date-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.35);
+    border-radius: 14px; padding: 16px 24px;
+    max-width: 500px; width: 100%;
+  }
+  .chosen-date-emoji { font-size: 36px; }
+  .chosen-date-text { text-align: left; }
+  .chosen-date-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.5px; color: rgba(255,255,255,0.4);
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .chosen-date-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px; font-weight: 700; color: var(--lavender);
+  }
+
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; max-width: 500px; width: 100%;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(196,181,253,0.15);
+    border-radius: 12px; padding: 16px; text-align: left;
+  }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(14px,3vw,18px); font-weight: 700; color: var(--lavender);
+  }
+  .stat-value.pink { color: var(--pink); }
+  .stat-value.green { color: #34D399; }
+
+  .love-msg {
+    max-width: 500px; font-size: 15px; line-height: 1.9;
+    color: rgba(255,255,255,0.8);
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 16px; padding: 28px 32px;
+  }
+  .love-msg strong { color: var(--pink); }
+
+  .love-stats {
+    max-width: 500px; width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(196,181,253,0.15);
+    border-radius: 16px; padding: 24px 28px;
+  }
+  .love-stats h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: 2px;
+    color: var(--lavender); text-transform: uppercase; margin-bottom: 16px;
+  }
+  .ls-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px;
+  }
+  .ls-row:last-child { border-bottom: none; }
+  .ls-key { color: rgba(255,255,255,0.5); }
+  .ls-val { font-family: 'JetBrains Mono', monospace; color: var(--lavender); font-weight: 600; }
+
+  footer {
+    position: relative; z-index: 1;
+    text-align: center; font-size: 13px; color: rgba(255,255,255,0.3);
+    padding: 24px; line-height: 1.8;
+  }
+  footer span { color: var(--pink); }
+
+  /* ─── CONFETTI & HEARTS ─── */
+  .confetti-piece {
+    position: fixed; border-radius: 2px;
+    pointer-events: none; z-index: 9999;
+    animation: fall var(--fall-d, 3s) var(--fall-del, 0s) ease-in forwards;
+  }
+  @keyframes fall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+  .floating-heart {
+    position: fixed; font-size: var(--sz, 20px);
+    pointer-events: none; z-index: 9998;
+    animation: float-up var(--fd, 4s) var(--fdel, 0s) ease-out forwards;
+  }
+  @keyframes float-up { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-60vh) scale(.5)} }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: linear-gradient(135deg, #1A0A3C, #0D0A1A);
+    border: 1px solid rgba(196,181,253,0.3);
+    border-radius: 20px; padding: 40px; max-width: 400px; width: 90%; text-align: center;
+    box-shadow: 0 0 80px rgba(139,92,246,0.4);
+    animation: modal-in .3s ease;
+  }
+  @keyframes modal-in { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal h2 { font-family:'JetBrains Mono',monospace; color:#FBBF24; font-size:18px; margin-bottom:12px; }
+  .modal p { font-size:14px; line-height:1.8; color:rgba(255,255,255,0.7); margin-bottom:8px; }
+  .modal .redirect { font-family:'JetBrains Mono',monospace; color:var(--pink); font-size:13px; margin-top:16px; }
+  .modal .countdown { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:700; color:var(--lavender); margin-top:8px; }
+
+  /* ─── FADE TRANSITION ─── */
+  .fade-in { animation: fadeIn .5s ease forwards; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<div class="stars-bg" id="stars"></div>
+
+<!-- ══════════════════════════════ LANDING ══════════════════════════════ -->
+<section id="landing">
+  <div class="version-badge">💜 Date Request Form v1.0</div>
+  <h1>Hello, My Adi ❤️</h1>
+
+  <div class="terminal-card">
+    <div class="terminal-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+    </div>
+
+    <div class="greeting">
+      <p>After countless days, beautiful memories, endless conversations,<br>and all the happiness we've shared together...</p>
+      <br>
+      <p>I realized something.</p>
+      <br>
+      <p>No matter how busy life gets, you're still <strong>my favorite person</strong>, my favorite notification, and <span class="hl">the best thing that's ever happened to me.</span></p>
+      <br>
+      <p>So I created this little application just for you. 💜</p>
+    </div>
+
+    <div class="question">
+      Would you like to go on another date<br>with your favorite IT boyfriend? 💜
+    </div>
+
+    <div id="btn-zone" class="btn-zone">
+      <button class="btn-yes" id="btn-yes" onclick="handleYes()">💜 YES</button>
+      <button class="btn-no" id="btn-no" onmouseenter="moveNo()" onclick="handleNoClick()">😢 NO</button>
+    </div>
+    <div class="no-msg" id="no-msg"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ DATE PICKER ══════════════════════════ -->
+<section id="date-picker">
+  <div class="version-badge">💜 Step 2 of 2 — Choose Your Date</div>
+  <h1>Pick a Date Type 🗓️</h1>
+
+  <div class="picker-card fade-in">
+    <div class="terminal-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+    </div>
+
+    <div class="picker-title">
+      Yay! Now pick what kind of date you want,<br><span>my favorite person</span> 💜
+    </div>
+
+    <div class="date-grid">
+      <div class="date-option" onclick="selectDate(this, '🍜', 'Food Trip', 'Let\'s eat everything!')">
+        <div class="date-check">✓</div>
+        <div class="date-emoji">🍜</div>
+        <div class="date-name">Food Trip</div>
+        <div class="date-desc">Let's eat everything!</div>
+      </div>
+      <div class="date-option" onclick="selectDate(this, '☕', 'Coffee Date', 'Cozy café vibes')">
+        <div class="date-check">✓</div>
+        <div class="date-emoji">☕</div>
+        <div class="date-name">Coffee Date</div>
+        <div class="date-desc">Cozy café vibes</div>
+      </div>
+      <div class="date-option" onclick="selectDate(this, '🎬', 'Movie Date', 'Popcorn & cuddles')">
+        <div class="date-check">✓</div>
+        <div class="date-emoji">🎬</div>
+        <div class="date-name">Movie Date</div>
+        <div class="date-desc">Popcorn & cuddles</div>
+      </div>
+      <div class="date-option" onclick="selectDate(this, '🕹️', 'Arcade Date', 'Games & prizes!')">
+        <div class="date-check">✓</div>
+        <div class="date-emoji">🕹️</div>
+        <div class="date-name">Arcade Date</div>
+        <div class="date-desc">Games & prizes!</div>
+      </div>
+      <div class="date-option" onclick="selectDate(this, '🛍️', 'Mall Date', 'Window shopping fun')">
+        <div class="date-check">✓</div>
+        <div class="date-emoji">🛍️</div>
+        <div class="date-name">Mall Date</div>
+        <div class="date-desc">Window shopping fun</div>
+      </div>
+      <div class="date-option" onclick="selectDate(this, '🎤', 'Karaoke Date', 'Sing our hearts out')">
+        <div class="date-check">✓</div>
+        <div class="date-emoji">🎤</div>
+        <div class="date-name">Karaoke Date</div>
+        <div class="date-desc">Sing our hearts out</div>
+      </div>
+      <div class="date-option" onclick="selectDate(this, '💜', 'Surprise Me!', 'Erwin chooses 😏')">
+        <div class="date-check">✓</div>
+        <div class="date-emoji">💜</div>
+        <div class="date-name">Surprise Me!</div>
+        <div class="date-desc">Erwin chooses 😏</div>
+      </div>
+    </div>
+
+    <div class="picker-note" id="picker-note"> select one to continue</div>
+    <button class="btn-continue" id="btn-continue" onclick="handleContinue()">
+      Continue → 💜
+    </button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ LOADING ══════════════════════════════ -->
+<section id="loading">
+  <div class="loading-card">
+    <div class="loader-title" id="loader-title">🔗 Establishing Connection...</div>
+    <div id="log-lines">
+      <div class="log-line" id="ll0">Connecting to Love Server...</div>
+      <div class="log-line" id="ll1">Checking Relationship Status...</div>
+      <div class="log-line" id="ll2">Retrieving Favorite Memories...</div>
+      <div class="log-line" id="ll3">Calculating Happiness Levels...</div>
+      <div class="log-line" id="ll4">Compatibility Check Complete...</div>
+      <div class="log-line" id="ll5">Loading Forever...</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progress</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ SUCCESS ══════════════════════════════ -->
+<section id="success">
+  <div class="match-badge">💜 MATCH CONFIRMED</div>
+
+  <!-- Chosen date display -->
+  <div class="chosen-date-banner">
+    <div class="chosen-date-emoji" id="chosen-emoji">💜</div>
+    <div class="chosen-date-text">
+      <div class="chosen-date-label">// Selected Date Type</div>
+      <div class="chosen-date-name" id="chosen-name">Surprise Me!</div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Relationship Status</div>
+      <div class="stat-value pink">Stronger Than Ever</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Compatibility Score</div>
+      <div class="stat-value green">100%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Trust Level</div>
+      <div class="stat-value">Maximum</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Love Level</div>
+      <div class="stat-value pink">Infinite ♾️</div>
+    </div>
+  </div>
+
+  <div class="love-msg">
+    <p>Thank you for saying yes. 💜</p>
+    <br>
+    <p>No matter where life takes us, I hope we continue <strong>creating memories together</strong>, laughing together, and <strong>choosing each other every day.</strong></p>
+    <br>
+    <p>I love you. 💜</p>
+  </div>
+
+  <div class="love-stats">
+    <h3>// Love Statistics</h3>
+    <div class="ls-row">
+      <span class="ls-key">Days Together</span>
+      <span class="ls-val" id="days-counter">Calculating...</span>
+    </div>
+    <div class="ls-row">
+      <span class="ls-key">Hugs Given</span>
+      <span class="ls-val">Unlimited</span>
+    </div>
+    <div class="ls-row">
+      <span class="ls-key">Kisses Delivered</span>
+      <span class="ls-val">Loading... 💋</span>
+    </div>
+    <div class="ls-row">
+      <span class="ls-key">Arguments Won By Me</span>
+      <span class="ls-val">0</span>
+    </div>
+    <div class="ls-row">
+      <span class="ls-key">Arguments Won By You</span>
+      <span class="ls-val">All of Them 😂</span>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer" style="display:none;">
+  <p>Made with <span>❤️</span>, coffee ☕, and a little bit of code.</p>
+  <p>For the most beautiful girl in my world.</p>
+  <p>— <span>Erwin 💜</span></p>
+</footer>
+
+<!-- Easter Egg Modal -->
+<div class="modal-overlay" id="easter-modal">
+  <div class="modal">
+    <h2>⚠ Critical Error</h2>
+    <p>Action not supported.</p>
+    <p><strong>Reason:</strong> You are already required to love your boyfriend.</p>
+    <p>Please click <strong>YES</strong> to continue.</p>
+    <div class="redirect">Redirecting...</div>
+    <div class="countdown" id="modal-countdown">3</div>
+  </div>
+</div>
+
+<script>
+// ─── STARS ───
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 120; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--o:${0.2+Math.random()*0.6};animation-delay:${Math.random()*4}s`;
+  starsEl.appendChild(s);
+}
+
+// ─── NO BUTTON ───
+const noBtn  = document.getElementById('btn-no');
+const yesBtn = document.getElementById('btn-yes');
+const noMsg  = document.getElementById('no-msg');
+const msgs   = ["Are you sure?","Think again.","Invalid Selection.","Access Denied.","Wrong Answer Detected.","This option is unavailable.","404: No not found.","Nice try, baby. 😏","Syntax Error: Try YES instead.","Permission Denied. 🚫"];
+let noAttempts = 0, yesSz = 16;
+
+function moveNo() {
+  const zone = document.getElementById('btn-zone');
+  const zr = zone.getBoundingClientRect();
+  const bw = noBtn.offsetWidth, bh = noBtn.offsetHeight;
+  noBtn.style.left = Math.random() * (zr.width - bw) + 'px';
+  noBtn.style.top  = (Math.random() * bh * 2 - bh) + 'px';
+}
+function handleNoClick() {
+  noAttempts++;
+  noMsg.textContent = msgs[Math.min(noAttempts - 1, msgs.length - 1)];
+  noBtn.style.transform = `scale(${Math.max(0.3, 1 - noAttempts * 0.08)})`;
+  yesSz = Math.min(26, yesSz + 1.5);
+  yesBtn.style.fontSize = yesSz + 'px';
+  if (noAttempts >= 4) showEasterEgg();
+  moveNo();
+}
+function showEasterEgg() {
+  const modal = document.getElementById('easter-modal');
+  const cd = document.getElementById('modal-countdown');
+  modal.classList.add('show');
+  let count = 3; cd.textContent = count;
+  const t = setInterval(() => {
+    count--; cd.textContent = count;
+    if (count <= 0) { clearInterval(t); modal.classList.remove('show'); handleYes(); }
+  }, 1000);
+}
+
+// ─── YES → DATE PICKER ───
+function handleYes() {
+  document.getElementById('landing').style.display = 'none';
+  const dp = document.getElementById('date-picker');
+  dp.style.display = 'flex';
+  dp.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─── DATE SELECTION ───
+let selectedDate = null;
+
+function selectDate(el, emoji, name, desc) {
+  document.querySelectorAll('.date-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedDate = { emoji, name };
+
+  document.getElementById('picker-note').textContent = `// "${name}" selected ✓`;
+  const btn = document.getElementById('btn-continue');
+  btn.classList.add('ready');
+}
+
+function handleContinue() {
+  if (!selectedDate) return;
+
+  // Store selection for success screen
+  document.getElementById('chosen-emoji').textContent = selectedDate.emoji;
+  document.getElementById('chosen-name').textContent  = selectedDate.name;
+
+  // Update loader title to reference chosen date
+  document.getElementById('loader-title').textContent = `🔗 Booking your ${selectedDate.name}...`;
+
+  document.getElementById('date-picker').style.display = 'none';
+  const ls = document.getElementById('loading');
+  ls.style.display = 'flex';
+  ls.scrollIntoView({ behavior: 'smooth' });
+  runLoader();
+}
+
+// ─── LOADER ───
+const steps = [
+  { id:'ll0', pct:10,  delay:400  },
+  { id:'ll1', pct:35,  delay:1200 },
+  { id:'ll2', pct:67,  delay:2400 },
+  { id:'ll3', pct:80,  delay:3400 },
+  { id:'ll4', pct:95,  delay:4400 },
+  { id:'ll5', pct:100, delay:5400 },
+];
+const fill = document.getElementById('prog-fill');
+const pct  = document.getElementById('prog-pct');
+
+function runLoader() {
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      document.getElementById(s.id).classList.add('active');
+      fill.style.width = s.pct + '%';
+      pct.textContent  = s.pct + '%';
+      if (i > 0) document.getElementById(steps[i-1].id).classList.replace('active','done');
+    }, s.delay);
+  });
+  setTimeout(() => {
+    document.getElementById('ll5').classList.replace('active','done');
+    showSuccess();
+  }, 6600);
+}
+
+// ─── SUCCESS ───
+function showSuccess() {
+  document.getElementById('loading').style.display = 'none';
+  const suc = document.getElementById('success');
+  const ftr = document.getElementById('site-footer');
+  suc.style.display = 'flex';
+  ftr.style.display = 'block';
+  suc.scrollIntoView({ behavior: 'smooth' });
+  launchConfetti();
+  launchHearts();
+  setDaysCounter();
+}
+
+function setDaysCounter() {
+  const start = new Date('2024-10-20');
+  const end   = new Date('2026-06-20');
+  const days  = Math.floor((end - start) / 86400000);
+  document.getElementById('days-counter').textContent = days + ' days 💜';
+}
+
+// ─── CONFETTI ───
+const confColors = ['#8B5CF6','#C4B5FD','#F9A8D4','#FBBF24','#34D399','#60A5FA'];
+function launchConfetti() {
+  for (let i = 0; i < 90; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.cssText = `left:${Math.random()*100}vw;top:-10px;background:${confColors[Math.floor(Math.random()*confColors.length)]};--fall-d:${2+Math.random()*3}s;--fall-del:${Math.random()*2}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};`;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 6000);
+    }, i * 40);
+  }
+}
+
+// ─── HEARTS ───
+function launchHearts() {
+  const emojis = ['💜','💕','💖','❤️','✨','💝','💗'];
+  for (let i = 0; i < 30; i++) {
+    setTimeout(() => {
+      const h = document.createElement('div');
+      h.className = 'floating-heart';
+      h.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      h.style.cssText = `left:${Math.random()*100}vw;bottom:${Math.random()*30}vh;--sz:${16+Math.random()*24}px;--fd:${3+Math.random()*3}s;--fdel:${Math.random()*3}s;`;
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 7000);
+    }, i * 150);
+  }
+}
+</script>
+</body>
+</html>
